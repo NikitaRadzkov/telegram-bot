@@ -34,3 +34,6 @@ npm-debug.log*
 # Yarn
 .yarn/
 yarn-error.log
+
+# Telegram sessions
+sessions.json
