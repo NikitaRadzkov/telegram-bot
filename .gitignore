@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+
+# TypeScript
+*.js
+*.js.map
+*.tsbuildinfo
+
+# Visual Studio Code
+.vscode/
+
+# Other editor files
+*.sublime-project
+*.sublime-workspace
+*.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Build output
+/dist/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Yarn
+.yarn/
+yarn-error.log
