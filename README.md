@@ -44,8 +44,8 @@ A simple Telegram bot created with Node.js and TypeScript using the Telegraf lib
 ### Features
 
 - Welcomes users with a start command.
-- Responds to the help command.
-- Echoes back any text message sent to the bot.
+- Action buttons for help.
+- Cron notification if user doesn't complete register.
 
 
 ### License
