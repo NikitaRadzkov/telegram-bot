@@ -32,6 +32,7 @@ A simple Telegram bot created with Node.js and TypeScript using the Telegraf lib
 
   ```dotenv
    BOT_TOKEN=your_bot_token_here
+   DAILY_NOTIFICATION=0 0 * * *
   ```
 
 5. Start the bot:

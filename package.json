@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && copyfiles assets/*.{jpg,png,jpeg} dist",
     "start": "node ./dist/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "copyfiles": "^2.4.1",
+    "cron": "^3.1.6",
     "reflect-metadata": "^0.1.13",
     "telegraf": "^4.15.2",
     "telegraf-session-local": "^2.1.1",

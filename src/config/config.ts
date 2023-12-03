@@ -1,5 +1,4 @@
-import { IConfig } from "./config.interface";
-
-export const CONFIG: IConfig = {
-  BOT_TOKEN: "BOT_TOKEN"
+export enum CONFIG {
+  BOT_TOKEN = "BOT_TOKEN",
+  DAILY_NOTIFICATION = "DAILY_NOTIFICATION"
 }
