@@ -32,7 +32,7 @@ A simple Telegram bot created with Node.js and TypeScript using the Telegraf lib
 
   ```dotenv
   # Common
-  BOT_TOKEN=6872956459:AAFIEjugX8Ah1EEWuYIpuJ10J9GpIEWkqaI
+  BOT_TOKEN=***
   PORT=5500
   CURRENCY=soles
 
@@ -40,8 +40,19 @@ A simple Telegram bot created with Node.js and TypeScript using the Telegraf lib
   DAILY_NOTIFICATION=0 */4 * * *
 
   # Links
-  REGISTER_LINK=https://cas.x-go-leads.com/click?pid=9946&offer_id=1171
-  VIP_CANAL_LINK=t.me/AlexcortesBot
+  REGISTER_LINK=https://example.com
+
+  MEXICO_BOT_LINK=t.me/@AlexramirezBot
+  COLUMBIA_BOT_LINK=t.me/@AlexMartinezBot
+  CHILE_BOT_LINK=t.me/@AlexblancoBot
+  ECUADOR_BOT_LINK=t.me/@AlexfloresBot
+  PERU_BOT_LINK=t.me/@AlexcortesBot
+
+  MEXICO_TELEGRAM_CHANNEL=https://t.me/yourChannel
+  COLUMBIA_TELEGRAM_CHANNEL=https://t.me/yourChannel
+  CHILE_TELEGRAM_CHANNEL=https://t.me/yourChannel
+  ECUADOR_TELEGRAM_CHANNEL=https://t.me/yourChannel
+  PERU_TELEGRAM_CHANNEL=https://t.me/yourChannel
   ```
 
 5. Start the bot:

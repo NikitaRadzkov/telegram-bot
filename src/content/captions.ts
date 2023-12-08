@@ -88,6 +88,8 @@ const registerText = '⚠️Para poder ganar dinero usando mis señales y obtene
   '\n' +
   '<b>📩Si tienes alguna pregunta escríbeme.</b>';
 
+const chooseLocation = 'Seleccione su ubicación actual';
+
 export const captions = {
   verifyRegistration: {
     success: verifyRegistrationSuccessText,
@@ -100,5 +102,6 @@ export const captions = {
   replyText,
   aboutMe,
   welcomeMessage,
-  registerText
+  registerText,
+  chooseLocation
 };
