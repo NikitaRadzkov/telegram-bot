@@ -31,8 +31,17 @@ A simple Telegram bot created with Node.js and TypeScript using the Telegraf lib
 4. Create a .env file in the root directory and add your Telegram Bot Token:
 
   ```dotenv
-   BOT_TOKEN=your_bot_token_here
-   DAILY_NOTIFICATION=0 0 * * *
+  # Common
+  BOT_TOKEN=6872956459:AAFIEjugX8Ah1EEWuYIpuJ10J9GpIEWkqaI
+  PORT=5500
+  CURRENCY=soles
+
+  # Cron
+  DAILY_NOTIFICATION=0 */4 * * *
+
+  # Links
+  REGISTER_LINK=https://cas.x-go-leads.com/click?pid=9946&offer_id=1171
+  VIP_CANAL_LINK=t.me/AlexcortesBot
   ```
 
 5. Start the bot:

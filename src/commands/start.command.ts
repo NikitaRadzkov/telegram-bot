@@ -1,4 +1,4 @@
-import { Context, Markup, Telegraf } from 'telegraf';
+import { Markup, Telegraf } from 'telegraf';
 import { CronJob } from 'cron';
 import { Command } from './command.class';
 import { IBotContext } from '../context/context.interface';
@@ -7,6 +7,8 @@ import { CONFIG } from '../config/config';
 import { IConfigService } from '../config/config.interface';
 
 import fs from 'fs';
+import { DataJSON, SessionsJSON } from './data.interface';
+import { buttons, captions } from '../content';
 
 export class StartCommand extends Command {
   constructor(
@@ -19,124 +21,182 @@ export class StartCommand extends Command {
   handle(): void {
     this.botStart();
 
-    this.getSoftAction();
+    this.textOn();
 
     this.verifyRegistrationAction();
+
+    this.verifyDeposit();
   }
 
-  private sendDailyNotification(ctx: Context) {
-    const notificationMessage = 'Вы не завершили регистрацию!';
+  private botStart() {
+    this.bot.start(async (ctx) => {
+      ctx.session.ref_id = Math.floor(Math.random() * 10001);
+      ctx.session.chat_id = ctx.chat.id;
 
-    const keyboard = Markup.inlineKeyboard([
-      [Markup.button.callback('💰 Получить софт', Actions.get_soft)],
-      [Markup.button.url('👩‍💻 Написать мне', 'https://t.me/darkan0nim')],
-      [Markup.button.url('🔥 Перейти на канал', 'https://t.me/ithumor')]
-    ]);
+      await ctx.replyWithPhoto({ source: fs.readFileSync('./assets/welcome.jpg') }, {
+        caption: captions.aboutMe,
+        parse_mode: "HTML",
+      });
 
+      const keyboard = Markup.inlineKeyboard([
+        [Markup.button.url(buttons.register, `${this.configService.get(CONFIG.REGISTER_LINK)}&ref_id=${ctx.session.ref_id}`)],
+        [Markup.button.callback(buttons.verifyRegister, Actions.verify_registration)],
+        [Markup.button.url(buttons.writeMe, this.configService.get(CONFIG.VIP_CANAL_LINK))]
+      ]);
+
+      setTimeout(async () => {
+        await ctx.replyWithPhoto({ source: fs.readFileSync('./assets/register.jpg') }, {
+          caption: captions.registerText,
+          parse_mode: 'HTML',
+          ...keyboard
+        });
+      }, 5000);
+
+      const dailyNotificationJob = CronJob.from({
+        cronTime: this.configService.get(CONFIG.DAILY_NOTIFICATION),
+        onTick: () => {
+          this.eventDailyNotification(ctx);
+        },
+       });
+
+      dailyNotificationJob.start();
+    });
+  }
+
+  private eventDailyNotification(ctx: IBotContext) {
     if (!ctx.chat) throw Error("Can't find chat");
 
-    this.bot.telegram.sendPhoto(ctx.chat.id, { source: fs.readFileSync('./assets/alert.jpg') },  {
-      caption: notificationMessage,
+    const keyboard = Markup.inlineKeyboard([
+      [Markup.button.url(buttons.deposit, `${this.configService.get(CONFIG.REGISTER_LINK)}&ref_id=${ctx.session.ref_id}`)],
+      [Markup.button.callback(buttons.verifyDeposit, Actions.verify_deposit)],
+      [Markup.button.url(buttons.writeMe, this.configService.get(CONFIG.VIP_CANAL_LINK))]
+    ]);
+
+    this.bot.telegram.sendPhoto(ctx.chat.id, { source: fs.readFileSync('./assets/deposit.jpg') },  {
+      caption: captions.verifyRegistration.success,
+      parse_mode: 'HTML',
       ...keyboard,
     });
   }
 
-  private getSoftAction() {
-    this.bot.action(Actions.get_soft, (ctx) => {
-      const getSoftText = "Привет!🔥 Если ты хочешь зарабатывать по БОЛЬШИМ КОЭФФИЦИЕНТАМ и пользоваться НАШИМ ЛИЧНЫМ ВЗЛОМ СОФТОМ с коэффициентами 4-6x в нашем закрытом ВИП чате\n" +
-        "\n" +
-        "⚠️Нужно выполнить ряд действий для того что бы Стратегия начала работать!\n" +
-        "\n" +
-        "✅ЭТО БЕСПЛАТНО✅\n" +
-        "\n" +
-        "❌Без этих действий стратегия работать не будет❌\n" +
-        "\n" +
-        "📲Для начала необходимо провести регистрацию на сайте игры LuckyJet.\n" +
-        "\n" +
-        "1. 📍Аккаунт должен быть НОВЫМ, если вы переходите по ссылке и попадаете на старый, необходимо выйти с него и заново перейти по кнопке «РЕГИСТРАЦИЯ»\n" +
-        "\n" +
-        "2. 📍После РЕГИСТРАЦИИ, нажмите кнопку «ПРОВЕРИТЬ РЕГИСТРАЦИЮ»\n" +
-        "\n" +
-        "👨‍💻Если у вас есть вопросы, напиши мне";
-
-        const keyboard = Markup.inlineKeyboard([
-          [Markup.button.url('📲 РЕГИСТРАЦИЯ', 'https://cas.x-go-leads.com/click?pid=9946&offer_id=1171')],
-          [Markup.button.callback('👩‍💻 ПРОВЕРИТЬ РЕГИСТРАЦИЮ', Actions.verify_registration)],
-          [Markup.button.url('👩‍💻 Написать мне', 'https://t.me/darkan0nim')]
-        ]);
-
-      ctx.replyWithPhoto({source: fs.readFileSync('./assets/pepe.jpg'),}, {
-        caption: getSoftText,
-        ...keyboard
-      })
-    });
-  }
-
   private verifyRegistrationAction() {
-    this.bot.action(Actions.verify_registration, (ctx) => {
-      const userIsRegister = ctx.session.isRegister;
+    this.bot.action(Actions.verify_registration, async (ctx) => {
+      const dataContent: DataJSON[] = await JSON.parse(fs.readFileSync('data.json', 'utf8'));
+      const sessionsContent: SessionsJSON = await JSON.parse(fs.readFileSync('sessions.json', 'utf8'));
 
-      const successText = "✅Регистрация ПРОЙДЕНА!";
+      const currentSession = sessionsContent.sessions.find(session => session.id === `${ctx.chat?.id}:${ctx.chat?.id}`);
 
-      const failedText = "❌Регистрация НЕ ПРОЙДЕНА!\n" +
-        "\n" +
-        "📲Для начала необходимо провести регистрацию на сайте игры LuckyJet/ Rocket Queen\n" +
-        "\n" +
-        "1. 📍Аккаунт должен быть НОВЫМ, если вы переходите по ссылке и попадаете на старый, необходимо выйти с него и заново перейти по кнопке «РЕГИСТРАЦИЯ»\n" +
-        "\n" +
-        "2. 📍После РЕГИСТРАЦИИ, нажмите кнопку «ПРОВЕРИТЬ РЕГИСТРАЦИЮ»\n" +
-        "\n" +
-        "‼️Если Вам Бот написал  «РЕГИСТРАЦИЯ НЕ ПРОЙДЕНА» попробуйте проверить по кнопке ниже через 5 минут. Если не помогло👇\n" +
-        "\n" +
-        "✅РЕШЕНИЕ ВОПРОСА В ЭТОМ ВИДЕО в КАНАЛЕ: https://t.me/c/1896323872/15\n" +
-        "\n" +
-        "🔰А если Вы выполнили регистрацию и спустя более 5 минут бот не видит ее, напиши мне👨‍💻"
-      ;
+      if (!currentSession) throw Error(`Can't find refIdFromSession with id: ${ctx.chat?.id}:${ctx.chat?.id}`);
 
-      const userText = userIsRegister ? successText : failedText;
-
-      ctx.editMessageMedia({
-        type: 'photo',
-        media: { source: fs.readFileSync('./assets/cat2.jpg') },
-        caption: userText
-      });
-    });
-  }
-
-  private botStart() {
-    this.bot.start((ctx) => {
-      const welcomeMessage =
-        '‼️Обязательно перед началом посмотри видео👆\n' +
-        '\n' +
-        '🔥Привет, меня зовут Саша, и я зарабатываю на своем софте по взлому Lucky Jet и Rocket Queen, в видео я показал, как это работает!\n' +
-        '\n' +
-        '💰Хочешь зарабатывать как я?\n' +
-        '\n' +
-        '📍Если возникли вопросы, пиши мне в любое время по кнопке "Написать мне"';
-
-      const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('💰 Получить софт', Actions.get_soft)],
-        [Markup.button.url('👩‍💻 Написать мне', 'https://t.me/darkan0nim')],
-        [Markup.button.url('🔥 Перейти на канал', 'https://t.me/ithumor')]
-      ]);
-
-      ctx.replyWithPhoto({ source: fs.readFileSync('./assets/cat1.jpg') }, {
-        caption: welcomeMessage,
-        ...keyboard,
+      dataContent.forEach((entry) => {
+        if (currentSession.data.ref_id === entry.ref_id) {
+          ctx.session.is_register = true;
+        }
       });
 
-      const userIsRegister = ctx.session.isRegister;
+      const userIsRegister = ctx.session.is_register;
 
-      if (!userIsRegister) {
-        const dailyNotificationJob = CronJob.from({
-          cronTime: this.configService.get(CONFIG.DAILY_NOTIFICATION),
-          onTick: () => {
-            this.sendDailyNotification(ctx);
-          },
+      if (userIsRegister) {
+        const keyboard = [
+          [Markup.button.url(buttons.deposit, `${this.configService.get(CONFIG.REGISTER_LINK)}&ref_id=${ctx.session.ref_id}`)],
+          [Markup.button.callback(buttons.verifyDeposit, Actions.verify_deposit)],
+          [Markup.button.url(buttons.writeMe, this.configService.get(CONFIG.VIP_CANAL_LINK))]
+        ];
+
+        await ctx.editMessageMedia({
+          type: 'photo',
+          media: { source: fs.readFileSync('./assets/deposit.jpg') },
+          caption: captions.verifyRegistration.success,
+          parse_mode: 'HTML',
         });
 
-        dailyNotificationJob.start();
+        await ctx.editMessageReplyMarkup({
+          inline_keyboard: keyboard
+        });
+      } else {
+        const keyboard = [
+          [Markup.button.url(buttons.register, `${this.configService.get(CONFIG.REGISTER_LINK)}&ref_id=${ctx.session.ref_id}`)],
+          [Markup.button.callback(buttons.verifyRegister, Actions.verify_registration)],
+          [Markup.button.url(buttons.writeMe, this.configService.get(CONFIG.VIP_CANAL_LINK))]
+        ];
+
+        await ctx.editMessageMedia({
+          type: 'photo',
+          media: { source: fs.readFileSync('./assets/register-failed.jpg') },
+          caption: captions.verifyRegistration.failed,
+          parse_mode: 'HTML',
+        });
+
+        await ctx.editMessageReplyMarkup({
+          inline_keyboard: keyboard
+        });
       }
+    });
+  }
+
+  private verifyDeposit() {
+    this.bot.action(Actions.verify_deposit, async (ctx) => {
+      const dataContent: DataJSON[] = await JSON.parse(fs.readFileSync('data.json', 'utf8'));
+      const sessionsContent: SessionsJSON = await JSON.parse(fs.readFileSync('sessions.json', 'utf8'));
+
+      const currentSession = sessionsContent.sessions.find(session => session.id === `${ctx.chat?.id}:${ctx.chat?.id}`);
+
+      if (!currentSession) throw Error(`Can't find refIdFromSession with id: ${ctx.chat?.id}:${ctx.chat?.id}`);
+
+      const userData = dataContent.find(el => el.ref_id === currentSession.data.ref_id);
+
+      if (!userData) throw Error(`Can't find userData with ref id: ${currentSession.data.ref_id}`);
+
+      if (userData.order_sum > 0) {
+        ctx.session.is_deposit = true
+      } else {
+        ctx.session.is_deposit = false
+      }
+
+      const userIsDeposit = ctx.session.is_deposit;
+
+        if (userIsDeposit) {
+          const keyboard = [
+            [Markup.button.url(buttons.joinVip, this.configService.get(CONFIG.VIP_CANAL_LINK))]
+          ];
+  
+          await ctx.editMessageMedia({
+            type: 'photo',
+            media: { source: fs.readFileSync('./assets/vip.jpg') },
+            caption: captions.verifyDeposit.success,
+            parse_mode: 'HTML',
+          });
+  
+          await ctx.editMessageReplyMarkup({
+            inline_keyboard: keyboard
+          });
+        } else {
+          const keyboard = [
+            [Markup.button.url(buttons.deposit, `${this.configService.get(CONFIG.REGISTER_LINK)}&ref_id=${ctx.session.ref_id}`)],
+            [Markup.button.callback(buttons.verifyDeposit, Actions.verify_deposit)],
+            [Markup.button.url(buttons.writeMe, this.configService.get(CONFIG.VIP_CANAL_LINK))]
+          ];
+
+          await ctx.editMessageMedia({
+            type: 'photo',
+            media: { source: fs.readFileSync('./assets/deposit-failed.jpg') },
+            caption: captions.verifyDeposit.failed,
+            parse_mode: 'HTML',
+          });
+
+          await ctx.editMessageReplyMarkup({
+            inline_keyboard: keyboard
+          });
+        }
+      
+    });
+  }
+
+  private textOn() {
+    this.bot.on('text', async (ctx) => {
+     await ctx.reply(captions.replyText, {
+        parse_mode: 'HTML'
+      });
     });
   }
 }

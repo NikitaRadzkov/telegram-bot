@@ -1,4 +1,5 @@
 export enum Actions {
-  get_soft = "get_soft",
-  verify_registration = "verify_registration"
+  verify_registration = "verify_registration",
+  verify_deposit = "verify_deposit",
+  handle_register = "handle_register"
 }

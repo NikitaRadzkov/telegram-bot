@@ -37,3 +37,4 @@ yarn-error.log
 
 # Telegram sessions
 sessions.json
+data.json

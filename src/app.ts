@@ -10,6 +10,8 @@ import { Command } from "./commands/command.class";
 import { StartCommand } from "./commands/start.command";
 import LocalSession from "telegraf-session-local";
 import { Logger } from "./logger/logger.service";
+import express from 'express';
+import fs from 'fs/promises';
 
 @injectable()
 class Bot {
@@ -24,13 +26,13 @@ class Bot {
   }
 
   async init() {
-    this.commands = [new StartCommand(this.bot, this.configService)];
-
-    for (const command of this.commands) {
-      command.handle();
-    }
-
     try {
+      this.commands = [new StartCommand(this.bot, this.configService)];
+
+      for (const command of this.commands) {
+        command.handle();
+      }
+
       Logger.info('Bot started successfully');
       await this.bot.launch();
     } catch (error) {
@@ -40,6 +42,37 @@ class Bot {
 }
 
 container.register<IConfigService>("IConfigService", { useClass: ConfigService });
+
+const app = express();
+const configService = new ConfigService();
+
+app.get('/stats', async (req, res) => {
+  try {
+    const status = req.query.status;
+    const geo = req.query.geo;
+  
+    const data = { status, geo };
+    let existingData = [];
+    const fileContent = await fs.readFile('data.json', 'utf-8');
+    
+    if (fileContent.trim() !== '') {
+      existingData = JSON.parse(fileContent);
+    }
+
+    existingData.push(data);
+  
+    await fs.writeFile('data.json', JSON.stringify(existingData, null, 2), 'utf-8');
+    
+    res.json({ message: 'Data saved successfully', data });
+  } catch (e) {
+    Logger.error(`Server error: ${e}`)
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.listen(Number(configService.get(CONFIG.PORT)), () => {
+  Logger.info(`Server is running at http://localhost:${configService.get(CONFIG.PORT)}`);
+});
 
 const bot = container.resolve(Bot);
 bot.init();

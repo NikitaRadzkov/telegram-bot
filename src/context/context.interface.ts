@@ -1,9 +1,11 @@
 import { Context } from "telegraf";
 
 export interface SessionData {
-  courseLike: boolean;
-  isRegister: boolean;
-  chatId: number;
+  is_register: boolean;
+  is_clicked_register: boolean;
+  is_deposit: boolean;
+  chat_id: number;
+  ref_id: number;
 }
 
 export interface IBotContext extends Context {

@@ -13,6 +13,7 @@
   "dependencies": {
     "copyfiles": "^2.4.1",
     "cron": "^3.1.6",
+    "express": "^4.18.2",
     "reflect-metadata": "^0.1.13",
     "telegraf": "^4.15.2",
     "telegraf-session-local": "^2.1.1",
@@ -20,6 +21,7 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
     "@typescript-eslint/parser": "^6.13.1",
     "dotenv": "^16.3.1",
